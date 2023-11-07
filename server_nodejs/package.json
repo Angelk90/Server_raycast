@@ -5,7 +5,8 @@
   "license": "MIT",
   "dependencies": {},
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start2": "node --inspect index.js"
   },
   "devDependencies": {
     "@types/node": "^17.0.21"
