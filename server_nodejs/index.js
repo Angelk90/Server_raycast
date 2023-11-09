@@ -5,11 +5,11 @@ let c = 0;
 const server = http.createServer(function (req, res) {
   if (req.url === "/" && req.method === "GET") {
     c++;
-    //console.log(`${req.method} ${req.url} - C: ${c}`);
+    console.log(`${req.method} ${req.url} - C: ${c}`);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.write(JSON.stringify({ count: c }));
   } else {
-    //console.log(`${req.method} ${req.url} - Invalid request`);
+    console.log(`${req.method} ${req.url} - Invalid request`);
     res.writeHead(400, { "Content-Type": "application/json" });
     res.write(JSON.stringify({ error: "Invalid request" }));
   }
@@ -23,6 +23,10 @@ server.on("error", function (error, req, res) {
     res.write(JSON.stringify({ error: "Internal Server Error" }));
     res.end();
   }
+});
+
+server.on('uncaughtException', function(e){
+    console.log(e);
 });
 
 server.listen(PORT, function () {
