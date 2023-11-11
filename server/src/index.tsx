@@ -5,32 +5,7 @@ import { exec as execCb, ChildProcess, spawn } from "child_process";
 import { promisify } from "util";
 import * as fs from "fs/promises";
 import { shellEnv } from "shell-env";
-
 const exec = promisify(execCb);
-
-interface EnvType {
-  env: Record<string, string>;
-  cwd: string;
-  shell: string;
-}
-
-let cachedEnv: EnvType | null = null;
-
-const getCachedEnv = async (): Promise<EnvType | null> => {
-  if (cachedEnv) return cachedEnv;
-  try {
-    const env = await shellEnv();
-    cachedEnv = {
-      env,
-      cwd: env.HOME || `/Users/${process.env.USER}`,
-      shell: env.SHELL,
-    };
-    return cachedEnv;
-  } catch (error) {
-    showFailureToast(error);
-    throw error;
-  }
-};
 
 interface Preferences {
   path: string;
@@ -77,6 +52,29 @@ enum LsofPrefix {
   INTERNET_PROTOCOLL = "t",
 }
 
+interface EnvType {
+  env: Record<string, string>;
+  cwd: string;
+  shell: string;
+}
+
+let cachedEnv: EnvType | null = null;
+const getCachedEnv = async (): Promise<EnvType | null> => {
+  if (cachedEnv) return cachedEnv;
+  try {
+    const env = await shellEnv();
+    cachedEnv = {
+      env,
+      cwd: env.HOME || `/Users/${process.env.USER}`,
+      shell: env.SHELL,
+    };
+    return cachedEnv;
+  } catch (error) {
+    showFailureToast(error);
+    throw error;
+  }
+};
+
 function convertCommands(commands: { [key: string]: string }): Command[] {
   return Object.entries(commands).map(([name, value]) => ({ name, value }));
 }
@@ -85,7 +83,7 @@ function isNumeric(character: string): boolean {
   return !Number.isNaN(Number(character));
 }
 
-const Command = ({ path }: { path: string }): { isLoading: boolean; data: Command[] | null; error: Error | null } => {
+const Command = ({ path }: { path: string }): { isLoading: boolean; data: Command[] | null; error: Error | undefined } => {
   const { isLoading, data, error } = useCachedPromise<Command[]>(async () => {
     const { stdout, stderr } = await exec(`find ${path}/package.json -exec echo -n "{}: " \\;`);
 
@@ -129,6 +127,10 @@ const App = (): JSX.Element => {
   useEffect(() => {
     console.log(execEnv !== undefined);
   }, [execEnv]);
+
+  useEffect(() => {
+    console.log(pidsList, pids);
+  }, [pids, pidsList]);
 
   useEffect(() => {
     let killed = false;
@@ -186,6 +188,12 @@ const App = (): JSX.Element => {
       if (child) {
         child.on("error", (error) => {
           console.error("Child process error:", error);
+        });
+
+        child.on('close', (code) => {
+          if (code !== 0) {
+            console.log(`ps process exited with code ${code}`);
+          }
         });
 
         child.on("exit", () => {
@@ -254,15 +262,15 @@ const App = (): JSX.Element => {
             case LsofPrefix.PORTS:
               values.portInfo
                 ? values.portInfo.push({
+                  host: value.split(":")[0],
+                  port: Number(value.split(":")[1]),
+                })
+                : (values.portInfo = [
+                  {
                     host: value.split(":")[0],
                     port: Number(value.split(":")[1]),
-                  })
-                : (values.portInfo = [
-                    {
-                      host: value.split(":")[0],
-                      port: Number(value.split(":")[1]),
-                    },
-                  ]);
+                  },
+                ]);
               break;
             case LsofPrefix.INTERNET_PROTOCOLL:
               values.internetProtocol = value;
@@ -282,12 +290,9 @@ const App = (): JSX.Element => {
     }
   };
 
-  useEffect(() => {
-    console.log(pidsList, pids);
-  }, [pids, pidsList]);
 
   return (
-    <MenuBarExtra icon={Icon.Anchor} isLoading={isLoading && execEnv}>
+    <MenuBarExtra icon={Icon.Anchor} isLoading={isLoading}>
       <MenuBarExtra.Item title="Script" />
       <MenuBarExtra.Item title={"Check"} onAction={() => checkPid()} />
       {data?.map((el: Command) => (

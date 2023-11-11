@@ -12,6 +12,12 @@
       "title": "Update Server",
       "description": "Template for showing a menu bar extra",
       "mode": "menu-bar"
+    },
+    {
+      "name": "view",
+      "title": "View Server",
+      "description": "View",
+      "mode": "view"
     }
   ],
   "preferences": [

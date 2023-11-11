@@ -7,12 +7,16 @@
     "express": "^4.18.2"
   },
   "scripts": {
-    "s": "node index.js",
-    "si": "node --inspect index.js",
-    "e": "node express.js",
-    "ei": "node --inspect express.js",
-    "b": "bun run bun.js",
-    "bi": "bun run --inspect bun.js"
+    "s": "node index/index.js",
+    "si": "node --inspect index/index.js",
+    "sc": "node index/indexc.js",
+    "sci": "node --inspect index/indexc.js",
+    "e": "node express/express.js",
+    "ei": "node --inspect express/express.js",
+    "ec": "node express/expressc.js",
+    "eci": "node --inspect express/expressc.js",
+    "b": "bun run bun/bun.js",
+    "bi": "bun run --inspect bun/bun.js"
   },
   "devDependencies": {
     "@types/node": "^17.0.21"
